@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tablatures</title>
+    <meta name="theme-color" content="#e8590c" />
+    <link rel="icon" type="image/png" href="./icone-192.png" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <script type="module" crossorigin src="./assets/index-BOGVHEBa.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BFg-pb0r.css">
+  <link rel="manifest" href="./manifest.webmanifest"></head>
+  <body>
+    <!-- ===================== Écran Bibliothèque ===================== -->
+    <div id="ecran-bibliotheque" class="ecran">
+      <header class="barre">
+        <h1>Tablatures</h1>
+        <span id="etat-synchro" class="discret-texte"></span>
+        <button id="bouton-synchro" hidden title="Synchroniser les morceaux entre vos appareils (via GitHub)">⟳ Synchro</button>
+        <span id="rangement" class="discret-texte"></span>
+        <button id="changer-rangement" class="discret" hidden>Changer</button>
+        <button type="button" class="bouton-apparence discret" title="Apparence : couleurs, thème clair ou sombre" aria-label="Apparence">🎨</button>
+      </header>
+
+      <!-- Premier lancement : où ranger les morceaux ? -->
+      <section id="accueil" class="accueil" hidden>
+        <h2>Où ranger vos morceaux ?</h2>
+        <button id="choisir-dossier" class="principal">Choisir le dossier « morceaux » de l'ordinateur</button>
+        <p class="discret-texte">Recommandé sur ordinateur : chaque morceau est un fichier que vous retrouvez dans l'Explorateur.</p>
+        <button id="stockage-navigateur">Garder les morceaux dans ce navigateur</button>
+        <p class="discret-texte">Pour la tablette, ou si le choix de dossier n'est pas possible.</p>
+      </section>
+
+      <!-- Dossier connu mais le navigateur redemande la permission -->
+      <section id="reautoriser" class="accueil" hidden>
+        <h2>Bon retour !</h2>
+        <button id="bouton-reautoriser" class="principal">Rouvrir le dossier « morceaux »</button>
+        <p class="discret-texte">Le navigateur demande votre accord à chaque nouvelle visite.</p>
+      </section>
+
+      <section id="liste" class="liste" hidden>
+        <div class="outils-liste">
+          <input id="recherche" type="search" placeholder="Rechercher un morceau…" aria-label="Rechercher un morceau" />
+          <button id="nouveau" class="principal">Nouveau morceau</button>
+          <label class="bouton-fichier">
+            Importer des fichiers
+            <input id="importer" type="file" multiple accept=".atex,.gp,.gp3,.gp4,.gp5,.gpx,.musicxml,.xml,.mp3,.ogg,.wav,.m4a" hidden />
+          </label>
+          <button id="ouvrir-corbeille" hidden title="Morceaux supprimés : les restaurer ou les effacer définitivement">🗑 Corbeille</button>
+        </div>
+        <p id="vide" class="discret-texte" hidden>Aucun morceau pour l'instant. Créez-en un, ou glissez un fichier Guitar Pro ici.</p>
+        <ul id="morceaux" class="morceaux"></ul>
+      </section>
+    </div>
+
+    <!-- ===================== Écran Écrire ===================== -->
+    <div id="ecran-ecrire" class="ecran" hidden>
+      <header class="barre barre-haut">
+        <!-- Ligne principale : où l'on est, le mode, la lecture -->
+        <div class="ligne-principale">
+          <button id="retour" class="discret" title="Retour à la liste des morceaux">← Morceaux</button>
+          <input id="titre" class="titre" aria-label="Titre du morceau" title="Titre du morceau : cliquez pour le changer" />
+          <button type="button" id="bouton-version" class="bouton-version" hidden></button>
+          <div class="choix modes" role="group" aria-label="Mode">
+            <button id="mode-edition" class="actif" aria-pressed="true" title="Écrire et modifier la tab">Édition</button>
+            <button id="mode-synchro" aria-pressed="false" title="Maquette du groupe : caler le rythme et les paroles">Synchronisation</button>
+            <button id="mode-apprentissage" aria-pressed="false" title="Travailler le morceau : tab en grand, vitesse, boucle ; rien n'est modifiable">Apprentissage</button>
+          </div>
+          <span class="espace"></span>
+          <div class="commandes-lecture" role="group" aria-label="Lecture">
+            <button id="lecture" class="icone-lecture" disabled title="Lecture / pause (Espace)" aria-label="Lecture">▶</button>
+            <button id="stop" class="icone-lecture" disabled title="Arrêter et revenir au début" aria-label="Stop">■</button>
+            <button id="son" title="Ce que fait entendre ▶ : la maquette du groupe, ou le son de la tab" hidden>🎧 Maquette</button>
+          </div>
+        </div>
+        <!-- Ligne des réglages du morceau et de l'affichage : plus discrète -->
+        <div class="ligne-reglages">
+          <label class="champ">Tempo <input id="tempo" type="number" min="20" max="400" inputmode="numeric" /></label>
+          <label class="champ" id="champ-accordage">Accordage <select id="accordage"></select></label>
+          <button type="button" id="bouton-capo" class="discret" title="Capodastre et transposition">Capo</button>
+          <button type="button" id="bouton-pdf" class="discret" title="Exporter en PDF (imprimer)" hidden>🖨 PDF</button>
+          <button type="button" id="bouton-historique" class="discret" title="Versions précédentes de ce morceau (historique de la synchro)" hidden>🕘</button>
+          <button type="button" id="bouton-assistant" class="discret" title="Assistant d’accords : tonalité, couleurs, progressions, à écouter" hidden>✨ Accords</button>
+          <label class="champ" id="champ-rythme">Rythme
+            <select id="rythme">
+              <option value="libre">Libre (sans durées)</option>
+              <option value="mesure">Mesuré (4/4)</option>
+            </select>
+          </label>
+          <label class="champ" id="champ-piste" hidden>Piste <select id="piste"></select></label>
+          <span id="enregistrement" class="discret-texte" role="status"></span>
+          <span class="espace"></span>
+          <div class="choix" role="group" aria-label="Taille de la partition">
+            <button id="zoom-moins" title="Partition plus petite (Ctrl + molette)">A−</button>
+            <button id="zoom-valeur" title="Revenir à 100 %">100 %</button>
+            <button id="zoom-plus" title="Partition plus grande (Ctrl + molette)">A+</button>
+          </div>
+          <div class="choix" role="group" aria-label="Affichage">
+            <button id="vue-tab" class="actif" aria-pressed="true">Tab</button>
+            <button id="vue-portee" aria-pressed="false">Tab + portée</button>
+          </div>
+          <button type="button" class="bouton-apparence discret" title="Apparence : couleurs, thème clair ou sombre" aria-label="Apparence">🎨</button>
+        </div>
+      </header>
+      <!-- Mode Synchronisation : maquette, calage du rythme (et plus tard des paroles) -->
+      <section id="panneau-synchro" class="panneau-synchro" hidden aria-label="Synchronisation">
+        <div class="groupes-synchro">
+          <div class="groupe-synchro groupe-source">
+            <span class="titre-groupe">Maquette</span>
+            <span id="maquette-etat" class="etat-synchro"></span>
+            <label class="bouton-fichier">
+              <span id="maquette-choisir">Choisir</span>
+              <input id="maquette-fichier" type="file" accept="audio/*,.mp3,.ogg,.wav,.m4a" hidden />
+            </label>
+            <button type="button" id="maquette-retirer" title="Le fichier reste dans le dossier ; seul le lien avec le morceau est retiré">Retirer</button>
+          </div>
+          <div class="groupe-synchro groupe-source">
+            <span class="titre-groupe">Tempo</span>
+            <span id="tempo-etat" class="etat-synchro"></span>
+            <button type="button" id="tempo-taper" title="Toucher sur chaque temps en écoutant la maquette : ce tempo sert de référence (noire) au calage note par note">👆 Taper</button>
+          </div>
+          <div class="groupe-synchro groupe-caler">
+            <span class="titre-groupe">Caler</span>
+            <button type="button" id="maquette-caler-notes" class="principal" title="Rythme, à partir de la note touchée sur la tab (ou du début) : un appui par accord / note, tenu tant qu'il sonne. Le calage d'avant et d'après est gardé.">Notes</button>
+            <button type="button" id="maquette-caler" title="Un appui par groupe : la tab suit la maquette, le rythme dans le groupe ne change pas">Groupes</button>
+            <button type="button" id="caler-lignes" title="Paroles, à partir des paroles touchées (ou de la partie du curseur) : un appui au début de chaque ligne chantée">Lignes</button>
+            <button type="button" id="caler-mots" title="Paroles, à partir du mot touché (ou de la partie du curseur) : un appui par mot, d'une ligne à l'autre. Sous la tab, chaque mot se place sous la note jouée à ce moment.">Mots</button>
+          </div>
+          <label class="groupe-synchro groupe-reglage" title="Combien de secondes de maquette rejouer avant l'endroit à caler, pour se mettre dans le rythme">
+            <span class="titre-groupe">Élan</span>
+            <select id="elan">
+              <option value="0">0 s</option>
+              <option value="1000">1 s</option>
+              <option value="2000">2 s</option>
+              <option value="3000">3 s</option>
+              <option value="4000">4 s</option>
+              <option value="6000">6 s</option>
+              <option value="8000">8 s</option>
+              <option value="12000">12 s</option>
+            </select>
+          </label>
+          <label class="groupe-synchro groupe-reglage" title="Calage note par note : un silence est écrit dans la tab si le trou entre le relâché d'une note et le tap suivant atteint cette durée (tout à gauche : jamais)">
+            <span class="titre-groupe">Silence dès</span>
+            <input type="range" id="silence-min" min="0" max="2000" step="25" />
+            <span id="silence-min-valeur" class="valeur-reglage"></span>
+          </label>
+          <label class="groupe-synchro groupe-reglage" title="Compense le retard du son (Bluetooth…) ou de la réaction : chaque nouveau tap est enregistré d'autant plus tôt. Le calage déjà fait ne change pas.">
+            <span class="titre-groupe">Avance des taps</span>
+            <input type="range" id="avance-taps" min="-300" max="300" step="10" />
+            <span id="avance-taps-valeur" class="valeur-reglage"></span>
+          </label>
+          <button type="button" id="aide-synchro-bouton" class="aide-bouton" aria-expanded="false" title="Comment caler">?</button>
+        </div>
+        <p id="aide-synchro" class="discret-texte aide-synchro" hidden>
+          Tout part du curseur : touchez une note sur la tab (ou une ligne, un mot des paroles), puis calez à partir de là — le calage d'avant et d'après est gardé, celui qu'on refait est remplacé.
+          Tapez d'abord le tempo : le calage des notes reconnaîtra croches, noires, blanches. Notes : appuyez au début de chaque accord, gardez appuyé tant que ça sonne (le trou après le relâché devient un silence). Ensuite ▶ fait entendre la maquette, la tab et les paroles suivent.
+        </p>
+      </section>
+      <!-- Glisser : bandeau de synchronisation plus grand ou plus petit -->
+      <div id="poignee-synchro" class="poignee-menu poignee-synchro" role="separator" aria-orientation="horizontal" title="Glisser pour agrandir / réduire le bandeau (double-clic : taille normale)"></div>
+      <!-- Calage de la tab sur la maquette, au toucher -->
+      <section id="calage" class="calage" hidden aria-label="Caler la tab sur la maquette">
+        <p id="calage-consigne" class="calage-consigne"></p>
+        <div class="calage-boutons">
+          <button id="calage-top" class="principal calage-top">Maintenant !</button>
+          <button id="calage-lecture">▶ Lancer la maquette</button>
+          <button id="calage-vitesse" title="Écouter plus lentement pour toucher plus juste">Vitesse 100 %</button>
+          <button id="calage-retour" title="Défaire le dernier appui, la maquette repart un peu avant (Retour arrière)">↶ Retour</button>
+          <button id="calage-recommencer">Recommencer</button>
+          <button id="calage-terminer" title="Garder les points déjà posés (le reste est réparti automatiquement)">Terminer</button>
+          <button id="calage-annuler">Annuler</button>
+        </div>
+      </section>
+      <section id="tap-tempo" class="calage" hidden aria-label="Taper le tempo">
+        <p class="calage-consigne">Touchez « Tap » (ou Espace) sur chaque temps, comme en tapant du pied. Le tempo s'affine à chaque toucher.</p>
+        <div class="calage-boutons">
+          <button type="button" id="tap-top" class="principal calage-top">Tap</button>
+          <span id="tap-bpm" class="tap-bpm">— bpm</span>
+          <button type="button" id="tap-lecture">▶ Lancer la maquette</button>
+          <button type="button" id="tap-moitie" title="Vous avez tapé les croches : diviser le tempo par deux">÷ 2</button>
+          <button type="button" id="tap-double" title="Vous avez tapé les blanches : doubler le tempo">× 2</button>
+          <button type="button" id="tap-recommencer">Recommencer</button>
+          <button type="button" id="tap-valider" class="principal">Valider</button>
+          <button type="button" id="tap-annuler">Annuler</button>
+        </div>
+      </section>
+      <div id="bandeau-lecture-seule" class="bandeau" hidden>
+        Fichier Guitar Pro : affiché tel quel.
+        <button id="copie-modifiable" class="principal">Créer une copie modifiable de cette piste</button>
+      </div>
+      <nav id="barre-outils" class="barre-outils" aria-label="Outils de saisie"></nav>
+      <!-- Glisser vers le bas : boutons du haut plus grands ; vers le haut : plus petits -->
+      <div id="poignee-menu" class="poignee-menu" role="separator" aria-orientation="horizontal"
+        title="Glisser pour agrandir ou réduire les boutons du haut (double-clic : taille normale)"></div>
+      <main class="ecrire">
+        <!-- Texte alphaTex : replié par défaut, pour dépanner -->
+        <section id="panneau-editeur" class="panneau-editeur" hidden aria-label="Texte (avancé)">
+          <div id="editeur" class="editeur"></div>
+          <div id="etat" class="etat" role="status"></div>
+        </section>
+        <div id="poignee" class="poignee" hidden role="separator" aria-orientation="vertical" title="Glisser pour redimensionner"></div>
+        <!-- Colonne centrale : la tab, et le manche en dessous -->
+        <div class="colonne-tab">
+          <!-- La marge est sur la section : alphaTab prend toute la largeur de #partition -->
+          <section id="panneau-rendu" class="panneau-rendu" aria-label="Partition">
+            <div id="partition"></div>
+          </section>
+          <section id="manche" class="manche" aria-label="Manche"></section>
+        </div>
+        <!-- Palette d'accords sur le côté droit, largeur réglable -->
+        <div id="poignee-palette" class="poignee" role="separator" aria-orientation="vertical" title="Glisser pour élargir ou rétrécir la palette"></div>
+        <section id="palette" class="palette" aria-label="Palette d'accords"></section>
+      </main>
+      <!-- Barre flottante du mode Jouer : s'efface pendant la lecture, revient au toucher -->
+      <div id="barre-jouer" class="barre-jouer" hidden>
+        <button id="jouer-debut" title="Revenir au début">⏮</button>
+        <button id="jouer-lecture" class="principal" title="Lecture / pause (Espace)">▶</button>
+        <span class="separateur-barre"></span>
+        <button id="jouer-moins-vite" title="Plus lent">−</button>
+        <button id="jouer-vitesse" class="valeur" title="Vitesse de lecture (clic : revenir à 100 %)">100 %</button>
+        <button id="jouer-plus-vite" title="Plus vite">+</button>
+        <button id="jouer-boucle" title="Boucle : rejouer en continu (le passage choisi, ou tout le morceau). Pour choisir un passage, glissez sur la tab.">🔁</button>
+        <button id="jouer-decompte" title="Décompte : 1, 2, 3, 4 avant de démarrer">1234</button>
+        <button id="jouer-metronome" title="Métronome pendant la lecture">♩</button>
+        <span class="separateur-barre"></span>
+        <button id="jouer-zoom-moins" title="Plus petit">A−</button>
+        <button id="jouer-zoom-plus" title="Plus grand">A+</button>
+        <button id="jouer-son" title="Écouter la maquette du groupe ou le son de la tab" hidden>Maquette</button>
+        <button id="jouer-plein-ecran" title="Plein écran (F)">⛶</button>
+        <button id="jouer-quitter" title="Revenir au mode édition (Échap)">✕ Édition</button>
+      </div>
+      <footer class="pied" id="pied-saisie">
+        <button id="bouton-texte" class="discret" aria-expanded="false">Texte (avancé)</button>
+        <p class="aide">
+          Cliquez sur la tab, puis : <kbd>←</kbd><kbd>→</kbd> temps · <kbd>↑</kbd><kbd>↓</kbd> corde · chiffres = case ·
+          <span id="aide-durees"><kbd>+</kbd><kbd>−</kbd> durée ·</span>
+          <span id="aide-groupe" hidden><kbd>+</kbd><kbd>−</kbd> écart · <kbd>Entrée</kbd> couper le groupe ·</span> <kbd>P</kbd> <kbd>H</kbd> <kbd>B</kbd> <kbd>S</kbd> <kbd>X</kbd> <kbd>V</kbd> effets ·
+          <kbd>Suppr</kbd> effacer · <kbd>Espace</kbd> lecture
+        </p>
+      </footer>
+    </div>
+
+    <!-- Fenêtre « Nouveau morceau » -->
+    <dialog id="dialogue-nouveau" class="dialogue">
+      <form method="dialog">
+        <h2>Nouveau morceau</h2>
+        <label>Titre <input id="nouveau-titre" required value="Nouveau morceau" /></label>
+        <label>Tempo <input id="nouveau-tempo" type="number" min="20" max="400" value="120" inputmode="numeric" /></label>
+        <label>Accordage <select id="nouveau-accordage"></select></label>
+        <label>Rythme
+          <select id="nouveau-rythme">
+            <option value="libre">Libre : juste les notes dans l'ordre, sans durées</option>
+            <option value="mesure">Mesuré : durées et mesures en 4/4</option>
+          </select>
+        </label>
+        <div class="boutons-dialogue">
+          <button type="button" data-fermer="annuler">Annuler</button>
+          <button value="creer" class="principal">Créer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Petit message temporaire en bas de l'écran -->
+    <div id="message" class="message" role="status" hidden></div>
+
+    <!-- Fenêtre « Synchronisation » -->
+    <dialog id="dialogue-synchro" class="dialogue">
+      <form method="dialog">
+        <h2>Synchroniser entre appareils</h2>
+        <p class="discret-texte">
+          Les morceaux et les maquettes sont rangés dans un dépôt GitHub ; le PC et la tablette s'y
+          retrouvent. Rien n'est jamais effacé : si un morceau a changé des deux côtés, les deux versions sont gardées.
+        </p>
+        <label>Dépôt GitHub (utilisateur/nom) <input id="synchro-depot" placeholder="Jurugol/tablatures-morceaux" /></label>
+        <label>Clé d'accès GitHub <input id="synchro-jeton" type="password" autocomplete="off" placeholder="github_pat_…" /></label>
+        <p class="discret-texte">
+          Clé à créer sur
+          <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com → Fine-grained token</a> :
+          accès au seul dépôt des morceaux, droit « Contents : Read and write ». Elle reste enregistrée sur cet appareil uniquement.
+        </p>
+        <p id="synchro-message" class="discret-texte" role="status"></p>
+        <div class="boutons-dialogue">
+          <button type="button" id="synchro-desactiver">Désactiver</button>
+          <button type="button" data-fermer="fermer">Fermer</button>
+          <button value="synchroniser" class="principal">Enregistrer et synchroniser</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Fenêtre « Partie » : nom, sorte (tab, chant seul, accords + paroles), paroles -->
+    <dialog id="dialogue-partie" class="dialogue dialogue-large">
+      <form method="dialog">
+        <h2 id="titre-dialogue-partie">Nommer la partie</h2>
+        <p id="aide-dialogue-partie" class="discret-texte">La partie commence au curseur.</p>
+        <div id="choix-parties" class="choix-parties"></div>
+        <label>Autre nom <input id="nom-partie" placeholder="Ex. : Refrain 2" /></label>
+        <div class="choix-sorte" role="radiogroup" aria-label="Sorte de partie">
+          <label><input type="radio" name="sorte-partie" value="tab" checked /> Tab</label>
+          <label><input type="radio" name="sorte-partie" value="chant" /> Chant seul <span class="discret-texte">(pas de guitare)</span></label>
+          <label><input type="radio" name="sorte-partie" value="grille" /> Accords + paroles <span class="discret-texte">(accords répétés)</span></label>
+        </div>
+        <label>Paroles <textarea id="paroles-partie" rows="6" placeholder="Une ligne chantée par ligne (collez le texte de la partie)"></textarea></label>
+        <p id="aide-paroles" class="discret-texte"></p>
+        <div class="boutons-dialogue">
+          <button type="button" id="retirer-partie" data-fermer="retirer">Retirer le nom</button>
+          <button type="button" data-fermer="annuler">Annuler</button>
+          <button value="valider" class="principal">Valider</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Plan du morceau : l'ordre des parties -->
+    <dialog id="dialogue-apparence" class="dialogue">
+      <form method="dialog">
+        <h2>Apparence</h2>
+        <p class="discret-texte">Une couleur par mode : Édition, Synchronisation, Apprentissage. En sombre, la tab reste sur une feuille claire.</p>
+        <div id="choix-palettes" class="choix-palettes" role="radiogroup" aria-label="Palette"></div>
+        <div class="choix choix-theme" role="group" aria-label="Thème">
+          <button type="button" data-theme="auto">Auto</button>
+          <button type="button" data-theme="clair">Clair</button>
+          <button type="button" data-theme="sombre">Sombre</button>
+        </div>
+        <div class="boutons-dialogue">
+          <button value="fermer" class="principal">Fermer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialogue-motifs" class="dialogue dialogue-large">
+      <form method="dialog">
+        <h2>Motifs</h2>
+        <p class="discret-texte">Des passages gardés sous un nom (« Motif 1 », « Demi-intro »…). Sélectionnez un passage dans la tab, puis « Garder la sélection ». Un motif se rappelle depuis le plan du morceau (« Rappeler… ») sans recopier sa tab, ou se copie pour le coller ailleurs (avec son rythme).</p>
+        <p><button type="button" id="garder-motif" class="principal">Garder la sélection comme motif</button></p>
+        <ul id="liste-motifs" class="liste-plan"></ul>
+        <p id="aucun-motif" class="discret-texte">Pas encore de motif.</p>
+        <div class="boutons-dialogue">
+          <button value="fermer">Fermer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialogue-plan" class="dialogue dialogue-large">
+      <form method="dialog">
+        <h2>Plan du morceau</h2>
+        <p class="discret-texte">L'ordre des parties. Une partie copiée ou déplacée garde son rythme : « Caler le début » (un appui sur la maquette) la remet en place. Les autres gardent leur calage.</p>
+        <ol id="liste-plan" class="liste-plan"></ol>
+        <div class="boutons-dialogue">
+          <button value="fermer" class="principal">Fermer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Reprise : un passage joué plusieurs fois -->
+    <dialog id="dialogue-capo" class="dialogue">
+      <form method="dialog">
+        <h2>Capo et transposition</h2>
+        <label class="champ-dialogue">Capodastre
+          <select id="choix-capo"></select>
+        </label>
+        <div id="garder-capo" class="choix-sorte" hidden>
+          <label><input type="radio" name="garder-capo" value="son" checked /> <span>Garder le même son : la tab et les accords se décalent (formes plus simples ou plus ouvertes)</span></label>
+          <label><input type="radio" name="garder-capo" value="cases" /> <span>Garder les mêmes cases : le morceau sonne plus haut ou plus bas</span></label>
+        </div>
+        <label class="champ-dialogue">Transposer
+          <select id="choix-transposer"></select>
+        </label>
+        <p id="apercu-capo" class="discret-texte"></p>
+        <label id="ligne-noms-reels" class="case-a-cocher"><input type="checkbox" id="noms-reels" /> <span>Avec le capo, afficher les noms réels (ce qui sonne) au lieu des formes jouées</span></label>
+        <div class="boutons-dialogue">
+          <button type="button" data-fermer="annuler">Annuler</button>
+          <button value="valider" class="principal">Appliquer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialogue-pdf" class="dialogue">
+      <form method="dialog">
+        <h2>Exporter en PDF</h2>
+        <p class="discret-texte">Le morceau est mis en page à part, sur A4, avec la même mise en page que la tab à l’écran (les pages ne coupent jamais une ligne). Dans la fenêtre d’impression, choisis « Enregistrer en PDF » (ou ton imprimante).</p>
+        <div class="choix-sorte">
+          <label><input type="radio" name="mode-pdf" value="une-page" checked /> <span><b>Une page</b> — tout sur une feuille, à la plus grande taille lisible (sur deux colonnes si besoin) : rien à tourner.</span></label>
+          <label><input type="radio" name="mode-pdf" value="deux-pages" /> <span><b>Deux pages</b> — plus grand, plus confortable : deux feuilles à poser côte à côte.</span></label>
+        </div>
+        <label class="champ-dialogue">Colonnes
+          <select id="colonnes-pdf">
+            <option value="auto">Automatique (une pour la tab, deux si c’est plus lisible pour les grilles)</option>
+            <option value="1">Une colonne</option>
+            <option value="2">Deux colonnes</option>
+          </select>
+        </label>
+        <p id="etat-pdf" class="discret-texte" role="status"></p>
+        <div class="boutons-dialogue">
+          <button type="button" data-fermer="annuler">Fermer</button>
+          <button type="button" id="lancer-pdf" class="principal">Mettre en page et imprimer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialogue-historique" class="dialogue dialogue-large">
+      <form method="dialog">
+        <h2>Versions précédentes</h2>
+        <p class="discret-texte">Chaque version envoyée par la synchro est gardée. Restaurer remplace le morceau ouvert par cette version (le lien vers son autre version, électrique ou acoustique, reste) ; Annuler revient en arrière.</p>
+        <ol id="liste-historique" class="liste-plan"></ol>
+        <div class="boutons-dialogue">
+          <button value="fermer" class="principal">Fermer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialogue-assistant" class="dialogue dialogue-large dialogue-assistant">
+      <form method="dialog">
+        <h2>Assistant d’accords</h2>
+        <label class="champ-dialogue">Tonalité <select id="assistant-tonalite"></select></label>
+        <p id="assistant-indices" class="discret-texte"></p>
+        <p id="assistant-replacer" hidden><button type="button" id="bouton-replacer">Replacer les accords comme dans l’électrique</button> <span class="discret-texte">Chaque accord à sa place d’après le calage (ceux joués entre deux lignes au début de la suivante), en gardant tes noms et doigtés.</span></p>
+        <h3>Capo et accords de la gamme</h3>
+        <p class="discret-texte">La meilleure position de capo (même son : seules les formes jouées changent), pour les accords actuels ou pour les majeurs et mineurs de la gamme. Ensuite, à l’oreille, accord par accord plus bas.</p>
+        <div id="assistant-sets"></div>
+        <h3>Accord par accord</h3>
+        <p class="discret-texte">Avec un capo, chaque proposition est écrite comme tu la joues (nom de la forme, vrai doigté) ; ce qui sonne est indiqué en second. « ✎ Ma forme » : forme toi-même l’accord, corde par corde ; ce que tu retiens devient ton style, proposé dans tes autres morceaux.</p>
+        <p class="discret-texte">Tes goûts : <span id="assistant-gouts"></span> <button type="button" id="oublier-gouts" class="lien-discret">Oublier mes goûts</button></p>
+        <p class="discret-texte">Touchez une proposition pour l’entendre ; puis écoutez-la dans l’enchaînement ou sur la maquette, et choisissez-la (partout, ou dans une partie). Annuler revient en arrière.</p>
+        <div id="assistant-accords"></div>
+        <div class="boutons-dialogue">
+          <button value="fermer" class="principal">Fermer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialogue-acoustique" class="dialogue dialogue-large">
+      <form method="dialog">
+        <h2>Créer la version acoustique</h2>
+        <p class="discret-texte">Un nouveau morceau, en accordage standard, avec la même maquette : chaque partie devient une grille accords + paroles (les accords posés sur le mot chanté quand ils tombent, d'après le calage), ou reste comme elle est. Les noms d'accords sont ceux qui sonnent. L'électrique ne change pas.</p>
+        <ol id="liste-acoustique" class="liste-plan liste-acoustique"></ol>
+        <div class="boutons-dialogue">
+          <button type="button" data-fermer="annuler">Annuler</button>
+          <button value="creer" class="principal">Créer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialogue-reprise" class="dialogue">
+      <form method="dialog">
+        <h2>Reprise</h2>
+        <p id="aide-reprise" class="discret-texte"></p>
+        <div id="choix-reprise" class="choix-parties"></div>
+        <div class="boutons-dialogue">
+          <button type="button" id="retirer-reprise">Retirer la reprise</button>
+          <button type="button" data-fermer="annuler">Annuler</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dialogue-corbeille" class="dialogue dialogue-large">
+      <form method="dialog">
+        <h2>Corbeille</h2>
+        <p class="discret-texte">Les morceaux supprimés (et leurs maquettes). Restaurez-les, ou effacez-les pour de bon.</p>
+        <ul id="liste-corbeille" class="liste-corbeille"></ul>
+        <div class="boutons-dialogue">
+          <button type="button" id="vider-corbeille">Vider la corbeille</button>
+          <button value="fermer" class="principal">Fermer</button>
+        </div>
+      </form>
+    </dialog>
+
+  </body>
+</html>
